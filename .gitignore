@@ -1,0 +1,5 @@
+# 仅排除临时/系统文件与截图缓存；勿排除 docs/ 评审文档、.github/workflows/deploy.yml、.nojekyll
+docs/_shots/
+*.log
+.DS_Store
+Thumbs.db
