@@ -31,12 +31,12 @@ site/
 ├── sitemap.xml                 域名占位 https://〔机构域名〕/
 ├── robots.txt                  域名占位，见下方第 5 节警告
 ├── .nojekyll                   禁用 Jekyll，保证静态文件原样发布
-├── .github/workflows/deploy.yml GitHub Pages 官方标准发布流程
+├── .github/workflows/deploy.yml Pages Actions 备用模板（本地保留，未上传远端，见 §5）
 └── README.md                   本文件
 ```
 
 - `news/index.html` **预留但不首发**，本版本未创建，也未在任何导航中链接。
-- `site/docs/` 下的 6 份规格、文案、设计与裁定文档为**内部评审材料**：`.github/workflows/deploy.yml` 在 `upload-pages-artifact` 之前执行 `rm -rf docs`，**不随 GitHub Pages 公开发布**；请在本地仓库保留，不要从源码删除。
+- `site/docs/` 下的规格、文案、设计与裁定文档为**内部评审材料**，与 `site/.github/` 一起**均未上传远端仓库**：隔离发生在源头，而非依赖构建期删除。请在本地完整保留，不要从源码删除。远端仓库仅含 17 个发布文件。
 
 ## 3. 本地预览
 
@@ -59,12 +59,22 @@ site/
 
 〔监督与投诉电话〕〔监督与投诉邮箱〕仅作为八页 R-02 页脚常显文本，**绝不做成主按钮**。每页仅 1 个主 CTA；站内跳转、相关阅读、下载项均为次级文字链。
 
-## 5. 部署
+## 5. 部署（已上线）
 
-1. 将 `site/` 作为 GitHub 仓库根目录（或 Pages 发布源根），推送到 `main` 分支。
-2. `.github/workflows/deploy.yml` 使用 GitHub 官方 `actions/configure-pages` + `actions/upload-pages-artifact` + `actions/deploy-pages` 标准配置，触发分支 `main`，上传路径 `.`，不写死任何仓库名。
-3. 仓库 Settings → Pages → Build and deployment 选择 **GitHub Actions**。
-4. `.nojekyll` 保证以 `_` 开头或目录内静态文件不被 Jekyll 处理。
+| 项 | 值 |
+|---|---|
+| 公开预览地址 | `https://344374971aa-lab.github.io/cq-care-preview-site/` |
+| 仓库（PUBLIC） | `https://github.com/344374971aa-lab/cq-care-preview-site` |
+| 发布 commit | 以远端 `main` 分支 HEAD 为准；末次记录见 `site/docs/delivery-checklist.md` §9.1 |
+| 发布模式 | GitHub Pages 分支模式（`build_type=legacy`，来源 `main` 根目录 `/`） |
+
+1. 实际采用 **Pages 分支发布模式**：站点由 `main` 分支根目录直接发布，**不依赖 GitHub Actions 工作流**。
+2. 未使用 `.github/workflows/deploy.yml` 的原因：当前账号 OAuth token 权限为 `gist, read:org, repo`，**缺少 `workflow` scope**；GitHub 对 `.github/workflows/` 路径的写入返回 404（刻意隐藏资源），另一条集成通道返回 403 `Resource not accessible by integration`。该文件保留为**备用模板**，待补齐 `workflow` 授权后可切回 Actions 模式（其 `rm -rf docs` 步骤届时为第二层防护）。
+3. `site/docs/` 与 `site/.github/` **均未上传远端**：内部评审材料从源头隔离；本地工作区完整保留。远端仅 17 个发布文件。
+4. 本地 `site/` git 仓库是**完整交付快照**（含 `docs/`、`deploy.yml`），远端是**发布子集**；两者内容差异为刻意设计，不是漏传。
+5. 发布工具为项目根目录的 `push_via_api.py`：经 GitHub REST Git Data API 建树／提交／更新 ref，绕开本机 `.gitconfig` 中指向失效端口 `127.0.0.1:7897` 的 git 代理配置。
+6. 更新内容后推送 `main`，Pages 自动重建；也可用 `POST /repos/{owner}/{repo}/pages/builds` 手动触发构建。
+7. `.nojekyll` 保证静态文件不被 Jekyll 处理。
 
 > **⚠️ 替换真实域名前不可提交搜索引擎。** `sitemap.xml` 与 `robots.txt` 中的域名一律为占位 `https://〔机构域名〕/`，当前不应提交到搜索引擎站长平台，也不应据占位地址对外宣称官方网址。正式对外发布前须同时完成：真实域名、ICP 备案主体、12 项硬闸门占位替换、授权关系书面结论。
 
@@ -85,7 +95,9 @@ site/
 
 ## 8. 自检记录
 
-功能与兼容性验证由主理人用 `verify_site.py` 独立执行（不采信实现方自检），结果回填 `site/docs/delivery-checklist.md` §5 与 `site/docs/verification-report.json`。覆盖：HTML 标签配对与嵌套、相对路径与外链、禁用词与零表单、逐页单 CTA 契约比对、站内死链、八页公共结构件、占位符统计、Chrome 1280/375 双断点渲染截图。
+功能与兼容性验证由主理人用 `verify_site.py` 独立执行（不采信实现方自检），结果回填 `site/docs/delivery-checklist.md` §5 与 `site/docs/verification-report.json`。覆盖：HTML 标签配对与嵌套、相对路径与外链、禁用词与零表单、逐页单 CTA 契约比对、站内死链、八页公共结构件、占位符统计、Chrome 1280/375 双断点渲染截图。移动端真实 375px 视口另由 `cdp_shots.py` 经 CDP `Emulation.setDeviceMetricsOverride` 复核。
+
+上线后（Phase 5）另做一轮线上复核：8 个页面、`404.html`、3 个 assets、`sitemap.xml`、`robots.txt` 全部 HTTP 200；`/docs/site-spec.md` 与 `/docs/` 均为 404；首页 `<title>` 正确、R-03 长句 2 处、其余 7 页各 1 处、旧短句与顶栏条 0、首页主 CTA 为 C1。详见 `site/docs/delivery-checklist.md` §9。
 
 ---
 
