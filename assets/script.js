@@ -1,7 +1,7 @@
 /* ==========================================================================
    assets/script.js — 全站唯一脚本（原生 JS，无依赖，渐进增强）
    职责：
-     1) 检测占位符：含「〔」的 tel:/mailto: 主 CTA 灰化禁用并显示「联系方式待公布」
+     1) 检测占位符：同步主 CTA 的 aria-disabled / tabindex（灰化与原因说明由 CSS 静态承接）
      2) 二维码资源缺失时隐藏图片、保留文字「二维码待公布」
      3) 移动端 <details> 抽屉的 aria-expanded 同步（原生 details 无 JS 亦可用）
      4) 回到顶部按钮显隐
@@ -19,6 +19,9 @@
     return href.indexOf(PLACEHOLDER) !== -1 || text.indexOf(PLACEHOLDER) !== -1;
   }
 
+  /* 占位禁用态由 CSS 属性选择器 [href*="〔"] 静态承接（禁用 JS 也成立）。
+     这里只做渐进增强：同步 aria-disabled / tabindex，保证读屏与键盘行为一致。
+     替换真实联系方式时，须同步移除 HTML 上静态的 aria-disabled 与 tabindex。 */
   function applyCtaState(link) {
     var dock = link.closest(".cta-dock") || document;
     var reason = dock.querySelector("[data-cta-reason]");
@@ -26,12 +29,11 @@
       link.classList.add("is-disabled");
       link.setAttribute("aria-disabled", "true");
       link.setAttribute("tabindex", "-1");
-      if (reason) { reason.hidden = false; reason.textContent = "联系方式待公布"; }
+      if (reason) { reason.textContent = "联系方式待公布"; }
     } else {
       link.classList.remove("is-disabled");
       link.removeAttribute("aria-disabled");
       link.removeAttribute("tabindex");
-      if (reason) { reason.hidden = true; }
     }
   }
 

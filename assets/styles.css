@@ -162,6 +162,11 @@ a:focus-visible,summary:focus-visible,button:focus-visible{ outline:2px solid va
   border-bottom:1px solid var(--line-soft); border-radius:var(--r-md);
 }
 .drawer-panel a:last-child{ border-bottom:0; }
+/* 抽屉分隔线下的 L0 法务件（隐私政策），不计入七栏导航 */
+.drawer-panel a.drawer-legal{
+  border-top:1px solid var(--line); margin-top:var(--sp-2); padding-top:var(--sp-3);
+  font-size:var(--fs-caption); color:var(--muted-ink);
+}
 .drawer-panel a:hover{ background:var(--card); color:var(--accent-strong); }
 .drawer-panel a[aria-current="page"]{ color:var(--accent-strong); font-weight:var(--fw-semibold); }
 @media (min-width:1024px){
@@ -246,8 +251,11 @@ a:focus-visible,summary:focus-visible,button:focus-visible{ outline:2px solid va
 .prose li{ margin-bottom:var(--sp-2); }
 
 .card-grid{ display:grid; grid-template-columns:1fr; gap:var(--sp-4); }
-@media (min-width:768px){ .card-grid.cols-3{ grid-template-columns:repeat(2,1fr); } }
-@media (min-width:1024px){ .card-grid.cols-3{ grid-template-columns:repeat(3,1fr); } }
+@media (min-width:768px){ .card-grid.cols-3,.card-grid.cols-4{ grid-template-columns:repeat(2,1fr); } }
+@media (min-width:1024px){
+  .card-grid.cols-3{ grid-template-columns:repeat(3,1fr); }
+  .card-grid.cols-4{ grid-template-columns:repeat(4,1fr); }
+}
 .card{
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-lg);
   padding:var(--card-pad); transition:box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
@@ -366,13 +374,20 @@ details.faq .answer{ font-size:var(--fs-caption); line-height:var(--lh-caption);
 .btn-primary{ background:var(--accent-strong); color:var(--white); border:2px solid var(--accent-strong); }
 .btn-primary:hover{ background:var(--accent-hover); border-color:var(--accent-hover); color:var(--white); transform:translateY(-2px); box-shadow:var(--shadow-1); }
 .btn-primary:active{ background:var(--accent-active); border-color:var(--accent-active); transform:translateY(1px); }
-.btn-primary.is-disabled{
+/* 占位 CTA 禁用态：由 href 中的全角占位符触发，禁用 JS 时同样成立（E-CTA-NOT-READY） */
+.btn-primary[href*="〔"],.btn-primary.is-disabled{
   background:var(--off-bg); color:var(--muted-ink); border:1px solid var(--line);
   cursor:not-allowed; pointer-events:none; box-shadow:none; transform:none;
   text-decoration:none;
 }
-.btn-primary.is-disabled:hover,.btn-primary.is-disabled:active{ background:var(--off-bg); color:var(--muted-ink); border-color:var(--line); transform:none; box-shadow:none; }
-.cta-reason{ font-size:var(--fs-caption); color:var(--muted-ink); }
+.btn-primary[href*="〔"]:hover,.btn-primary[href*="〔"]:active,
+.btn-primary.is-disabled:hover,.btn-primary.is-disabled:active{
+  background:var(--off-bg); color:var(--muted-ink); border-color:var(--line);
+  transform:none; box-shadow:none;
+}
+/* 原因说明：仅占位态显示；替换为真实值后自动隐藏，不依赖 JS */
+.cta-reason{ display:none; font-size:var(--fs-caption); color:var(--muted-ink); }
+.btn-primary[href*="〔"] + .cta-reason{ display:inline; }
 .cta-contact{ font-size:var(--fs-caption); line-height:var(--lh-caption); color:var(--muted-ink); flex:1 1 240px; }
 .cta-contact .mono{ color:var(--ink); }
 @media (max-width:767px){

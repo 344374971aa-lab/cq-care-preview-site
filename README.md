@@ -42,7 +42,7 @@ site/
 
 全站相对路径，可直接**双击 `index.html`** 以 `file://` 打开；也可在 `site/` 目录起任意静态文件服务。8 个页面共用 `assets/styles.css` 与 `assets/script.js`，内页按层级使用 `../assets/…`。
 
-主 CTA 在占位未补齐时由 `assets/script.js` 检测全角方括号占位符后灰化禁用并显示「联系方式待公布」；二维码资源缺失时隐藏图片、保留文字「二维码待公布」。禁用 JS 后正文、导航抽屉（原生 `<details>`）与主 CTA 文案仍可读。
+主 CTA 在占位未补齐时由 **CSS 属性选择器 `[href*="〔"]` 静态灰化禁用并显示「联系方式待公布」**，`assets/script.js` 仅作渐进增强（同步 `aria-disabled`/`tabindex` 以对齐读屏与键盘行为）；二维码资源缺失时隐藏图片、保留文字「二维码待公布」。**禁用 JS 时主 CTA 仍正确灰化、不可点击，且不呈现「可点击的假 tel:/mailto: 链接」**——这是本轮对渐进增强缺陷（FN19）的修复。替换真实联系方式时，须同步移除 HTML 上静态的 `aria-disabled` 与 `tabindex`（启用 JS 时脚本会自动清理；禁用 JS 时 CSS 仍据 `href` 是否含 `〔` 自行判断）。
 
 ## 4. 主 CTA 冻结表（唯一事实来源）
 
@@ -72,7 +72,7 @@ site/
 2. 未使用 `.github/workflows/deploy.yml` 的原因：当前账号 OAuth token 权限为 `gist, read:org, repo`，**缺少 `workflow` scope**；GitHub 对 `.github/workflows/` 路径的写入返回 404（刻意隐藏资源），另一条集成通道返回 403 `Resource not accessible by integration`。该文件保留为**备用模板**，待补齐 `workflow` 授权后可切回 Actions 模式（其 `rm -rf docs` 步骤届时为第二层防护）。
 3. `site/docs/` 与 `site/.github/` **均未上传远端**：内部评审材料从源头隔离；本地工作区完整保留。远端仅 17 个发布文件。
 4. 本地 `site/` git 仓库是**完整交付快照**（含 `docs/`、`deploy.yml`），远端是**发布子集**；两者内容差异为刻意设计，不是漏传。
-5. 发布工具为项目根目录的 `push_via_api.py`：经 GitHub REST Git Data API 建树／提交／更新 ref，绕开本机 `.gitconfig` 中指向失效端口 `127.0.0.1:7897` 的 git 代理配置。
+5. 发布工具为项目根目录的 `push_via_api.py`：经 GitHub REST Git Data API 建树／提交／更新 ref，绕开本机 `.gitconfig` 中指向失效端口 `127.0.0.1:7897` 的 git 代理配置。**默认（含 `--check`）仅本地预检、不产生任何远程写入**；预检含发布子集完整性、内部材料隔离、全站相对路径、noindex 兜底、零表单红线、robots `Disallow: /` 与二进制文件检测。确认无误后运行 `python push_via_api.py --push` 才真正推送。
 6. 更新内容后推送 `main`，Pages 自动重建；也可用 `POST /repos/{owner}/{repo}/pages/builds` 手动触发构建。
 7. `.nojekyll` 保证静态文件不被 Jekyll 处理。
 
@@ -88,14 +88,14 @@ site/
 
 ## 7. 结构与交互约定
 
-- 八页统一结构：**不设顶栏占位说明条**；header（7 项主导航，移动端原生 `<details>` 抽屉）→ skip-link → 面包屑 → 眉标 / H1 / lead → 信息卡 → 分节正文 → R-01 边界声明带 → 单一主 CTA（移动吸底条 `position:sticky; bottom:0`，**非 fixed**，位于 `<main>` 末尾、`<footer>` 之前）→ 相关阅读 2 条 → R-02 页脚（**末行含预览态统一说明，八页逐字一致**）。首页首屏信息卡内另有一句同样的说明，全站仅此两处。
+- 八页统一结构：**不设顶栏占位说明条**；header（**7 项主导航**：关于我们 / 服务与边界 / 找到帮助 / 志愿者中心 / 生命关怀知识 / 信息公开 / 新闻与活动〔锚点 `index.html#news`〕；移动端原生 `<details>` 抽屉，分隔线下方另有「隐私政策与个人信息保护说明」L0 法务件）→ skip-link → 面包屑 → 眉标 / H1 / lead → 信息卡 → 分节正文 → R-01 边界声明带 → 单一主 CTA（移动吸底条 `position:sticky; bottom:0`，**非 fixed**，位于 `<main>` 末尾、`<footer>` 之前）→ 相关阅读 2 条 → R-02 页脚（**末行含预览态统一说明，八页逐字一致**）。首页首屏信息卡内另有一句同样的说明，全站仅此两处；首页「信息公开摘要」为 **四列栅格（cols-4）**。全站 9 个 HTML 均带 `<meta name="robots" content="noindex, nofollow">` 防风索引。
 - 焦点可见：`:focus-visible` 为 `2px solid #185FA5` + offset 2px；装饰性 SVG 一律 `aria-hidden="true" focusable="false"`；无正 `tabindex`、无键盘陷阱。
 - 过期／待核态以「换文字色 + 状态标签 + 置底」表达，**不使用 `opacity` 降透明度**。
 - 含 `@media print` 基础打印样式与 `@media (prefers-reduced-motion: reduce)` 关闭过渡。
 
 ## 8. 自检记录
 
-功能与兼容性验证由主理人用 `verify_site.py` 独立执行（不采信实现方自检），结果回填 `site/docs/delivery-checklist.md` §5 与 `site/docs/verification-report.json`。覆盖：HTML 标签配对与嵌套、相对路径与外链、禁用词与零表单、逐页单 CTA 契约比对、站内死链、八页公共结构件、占位符统计、Chrome 1280/375 双断点渲染截图。移动端真实 375px 视口另由 `cdp_shots.py` 经 CDP `Emulation.setDeviceMetricsOverride` 复核。
+功能与兼容性验证由主理人用 `verify_site.py` 独立执行（不采信实现方自检），结果回填 `site/docs/delivery-checklist.md` §5 与 `site/docs/verification-report.json`。**当前覆盖 15 项（V1–V15）**：HTML 标签配对、相对路径／外链／禁用词／零表单、逐页单 CTA 契约、站内死链、八页公共结构件、占位符统计、七栏导航结构（含「新闻与活动」当前态）、R-01/R-02 八页逐字一致、预览态说明计数、CTA 占位禁用态（含**禁用 JS 真实视口复核**）、noindex／robots／sitemap 防索引配置、404 页、无障碍静态项（焦点环／44px／减少动效／打印／无 `outline:none`）、发布子集隔离。移动端真实 375/768/1280px 视口另由 `cdp_shots.py` 经 CDP `Emulation.setDeviceMetricsOverride` 复核，0 横向溢出。
 
 上线后（Phase 5）另做一轮线上复核：8 个页面、`404.html`、3 个 assets、`sitemap.xml`、`robots.txt` 全部 HTTP 200；`/docs/site-spec.md` 与 `/docs/` 均为 404；首页 `<title>` 正确、R-03 长句 2 处、其余 7 页各 1 处、旧短句与顶栏条 0、首页主 CTA 为 C1。详见 `site/docs/delivery-checklist.md` §9。
 
